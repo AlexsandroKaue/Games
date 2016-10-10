@@ -39,15 +39,14 @@ int main()
 	inicializa_matriz(tab);
 	JHI_Point2d rect;
 	int turbo = 0;
-	int pos = 0;
 	int move = 0;
 	int color;
-	int get_another_color = 1;
 	int linha = 0;
 	int game_over=0;
 	int a;
 	int b;
 	int prox_y;
+	int colision = 0;
 	JHI_KeyboardSt key;
 	JHI_MouseSt mouse;
 
@@ -88,11 +87,7 @@ int main()
 			}
 
 		}else{
-			if(get_another_color){
-				color = rand()%4;
-				get_another_color = 0;
-			}
-			jhi_draw_fill_rect(point, SIZE_BLOCK, SIZE_BLOCK, color);
+			jhi_draw_fill_rect(point, SIZE_BLOCK, SIZE_BLOCK, WHITE);
 			int i,j;
 			for(i=0;i<MATRIX_ROW_INDEX;i++){
 				for(j=0;j<MATRIX_COL_INDEX;j++){
@@ -156,53 +151,46 @@ int main()
 			if(prox_y < HEIGHT_WINDOW)
 			{
 				if(tab[a][b].fill == 1){
+					colision=1;
 					tab[a-1][b].fill = 1;
-					tab[a-1][b].color = color;
-					get_another_color = 1;
 					point.y = prox_y;
 					int i,j;
 					linha = 0;
 					for(j=0;j<MATRIX_COL_INDEX;j++){
 						linha += tab[a][j].fill;
 					}
-					if(linha == MATRIX_COL_INDEX){
-						for(i=MATRIX_ROW_INDEX-1;i>=0;i--){
-							for(j=MATRIX_COL_INDEX-1;j>=0;j--){
-								tab[i+1][j] = tab[i][j];
-							}
-						}
-					}
 					if(a-1==0){
 						game_over = 1;
 					}
-					point.y = 0;
-					srand( (unsigned)time(NULL) );
-					point.x = (rand() % OFFSET_HORIZON) * SIZE_BLOCK;
 				}else{
 					point.y += SPEED + turbo;
-					turbo = 0; 	
+					turbo = 0; 
+					colision=0;	
 				}
 			}else{
+				colision=1;
 				tab[MATRIX_ROW_INDEX-1][b].fill = 1;
-				tab[MATRIX_ROW_INDEX-1][b].color = color;
 				turbo =0;
-				point.y = 0;
-				srand( (unsigned)time(NULL) );
-				point.x = (rand() % OFFSET_HORIZON) * SIZE_BLOCK;
 				int i,j;
 				linha = 0;
 				for(j=0;j<MATRIX_COL_INDEX;j++){
 					linha += tab[MATRIX_ROW_INDEX-1][j].fill;
 				}
+				
+			}
+
+			if(colision){
 				if(linha == MATRIX_COL_INDEX){
-					for(i=MATRIX_ROW_INDEX-1;i>=0;i--){
+					for(i=MATRIX_ROW_INDEX-2;i>=0;i--){
 						for(j=MATRIX_COL_INDEX-1;j>=0;j--){
 							tab[i+1][j] = tab[i][j];
 							tab[i][j].fill = 0;
 						}
 					}
 				}
-				
+				point.y = 0;
+				srand( (unsigned)time(NULL) );
+				point.x = (rand() % OFFSET_HORIZON) * SIZE_BLOCK;
 			}
 
 		}
@@ -226,6 +214,7 @@ void inicializa_matriz(Coordenate m[][MATRIX_COL_INDEX])
 			coordenate.y = i;
 			coordenate.x = j;
 			coordenate.fill = 0;
+			coordenate.color = WHITE;
 			m[i][j] = coordenate;
 		}
 	}
