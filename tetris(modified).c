@@ -19,7 +19,7 @@
 #define OFFSET_HORIZON WIDTH_WINDOW / SIZE_BLOCK
 #define MATRIX_ROW_INDEX HEIGHT_WINDOW / SIZE_BLOCK
 #define MATRIX_COL_INDEX WIDTH_WINDOW / SIZE_BLOCK
-#define SPEED 10
+#define SPEED 2
 
 typedef struct{
 	int x;
@@ -28,9 +28,13 @@ typedef struct{
 	int color;
 }Coordenate;
 
+
+	
+
+
 void inicializa_matriz(Coordenate m[][MATRIX_COL_INDEX]);
 
-void inicializa_figura(JHI_Point2d pol_points[]);
+void start_points(JHI_Point2d pol_points[], int num);
 
 int main()
 {
@@ -41,17 +45,19 @@ int main()
 	inicializa_matriz(tab);
 	JHI_Point2d rect;
 	JHI_Point2d pol_points[6];
+	JHI_Point2d col_points[3];
 	int turbo = 0;
 	int move = 0;
 	int color;
 	int linha = 0;
 	int game_over=0;
-	int a;
-	int b;
-	int prox_y;
+	int a0, a1, a2;
+	int b0, b1, b2;
+	int prox_y_0, prox_y_1, prox_y_2;
 	int colision = 0;
 	JHI_KeyboardSt key;
 	JHI_MouseSt mouse;
+	char rotation0[] = {'r','r','r','d','l','l','d','l','u','u'};
 
 	pol.y = 0;
 	srand( (unsigned)time(NULL) );
@@ -90,25 +96,29 @@ int main()
 			}
 
 		}else{
-			inicializa_figura(pol_points);
+			start_points(pol_points,6);
+			start_points(col_points,3);
 			pol_points[0].x = pol.x;
 			pol_points[0].y = pol.y;
-			
+			//col_points[0] = pol_points[0]; 
+
 			pol_points[1].x = pol.x + 3*SIZE_BLOCK;
 			pol_points[1].y = pol.y;
 			
 			pol_points[2].x = pol.x + 3*SIZE_BLOCK;
 			pol_points[2].y = pol.y + SIZE_BLOCK;
+			col_points[2] = pol_points[2];
 			
 			pol_points[3].x = pol.x + SIZE_BLOCK;
 			pol_points[3].y = pol.y + SIZE_BLOCK;
+			col_points[1] = pol_points[3];
 			
 			pol_points[4].x = pol.x + SIZE_BLOCK;
 			pol_points[4].y = pol.y + 2*SIZE_BLOCK;
 			
 			pol_points[5].x = pol.x;
 			pol_points[5].y = pol.y + 2*SIZE_BLOCK;
-
+			col_points[0] = pol_points[5];	
 			jhi_draw_polygon(pol_points, 6, WHITE);
 			int i,j;
 			for(i=0;i<MATRIX_ROW_INDEX;i++){
@@ -166,22 +176,85 @@ int main()
 			if (move)
 			{
 				if(key.key == KEY_DOWN) turbo = 20;
+				if(key.key == KEY_UP){ 
+					pol_points[0].x = pol.x;
+					pol_points[0].y = pol.y;
+					//col_points[0] = pol_points[0]; 
+
+					pol_points[1].x = pol.x + 2*SIZE_BLOCK;
+					pol_points[1].y = pol.y;
+					
+					pol_points[2].x = pol.x + 2*SIZE_BLOCK;
+					pol_points[2].y = pol.y + 3*SIZE_BLOCK;
+					col_points[2] = pol_points[2];
+					
+					pol_points[3].x = pol.x + SIZE_BLOCK;
+					pol_points[3].y = pol.y + 3*SIZE_BLOCK;
+					col_points[1] = pol_points[3];
+					
+					pol_points[4].x = pol.x + SIZE_BLOCK;
+					pol_points[4].y = pol.y + SIZE_BLOCK;
+					
+					pol_points[5].x = pol.x;
+					pol_points[5].y = pol.y + SIZE_BLOCK;
+					col_points[0] = pol_points[5]; 
+				}
+
 			}
-			prox_y = pol.y + SIZE_BLOCK + SPEED + turbo;
-			a = prox_y / SIZE_BLOCK;
-			b = pol.x / SIZE_BLOCK;
-			if(prox_y < HEIGHT_WINDOW)
-			{
-				if(tab[a][b].fill == 1){
+			prox_y_0 = col_points[0].y + SPEED + turbo;
+			prox_y_1 = col_points[1].y + SPEED + turbo;
+			prox_y_2 = col_points[2].y + SPEED + turbo;
+			a0 = prox_y_0 / SIZE_BLOCK;
+			a1 = prox_y_1 / SIZE_BLOCK;
+			a2 = prox_y_2 / SIZE_BLOCK;
+			b0 = pol.x / SIZE_BLOCK;
+			b1 = (pol.x / SIZE_BLOCK) + 1;
+			b2 = (pol.x / SIZE_BLOCK) + 2;
+			int a;
+			int b;
+			if(prox_y_0 < HEIGHT_WINDOW)
+			{	
+				if(tab[a0][b0].fill == 1){
 					colision=1;
-					tab[a-1][b].fill = 1;
-					pol.y = prox_y;
+					tab[a0 - 1][b0].fill = 1;
+					tab[a0 - 2][b0].fill = 1;
+					tab[a0 - 2][b0 + 1].fill = 1;
+					tab[a0 - 2][b0 + 2].fill = 1;
+					//pol.y = prox_y_0;
 					int i,j;
 					linha = 0;
 					for(j=0;j<MATRIX_COL_INDEX;j++){
-						linha += tab[a][j].fill;
+						linha += tab[a0 - 1][j].fill;
 					}
-					if(a-1==0){
+					if(a0 - 2 == 0){
+						game_over = 1;
+					}
+				}else if(tab[a1][b1].fill == 1){
+					colision=1;
+					tab[a1 - 1][b1].fill = 1;
+					tab[a1 - 1][b1 + 1].fill = 1;
+					tab[a1 - 1][b1 - 1].fill = 1;
+					tab[a1][b1 - 1].fill = 1;
+					int i,j;
+					linha = 0;
+					for(j=0;j<MATRIX_COL_INDEX;j++){
+						linha += tab[a1 - 1][j].fill;
+					}
+					if(a1 - 1 == 0){
+						game_over = 1;
+					}
+				}else if(tab[a2][b2].fill == 1){
+					colision=1;
+					tab[a2 - 1][b2].fill = 1;
+					tab[a2 - 1][b2 - 1].fill = 1;
+					tab[a2 - 1][b2 - 2].fill = 1;
+					tab[a2][b2 - 2].fill = 1;
+					int i,j;
+					linha = 0;
+					for(j=0;j<MATRIX_COL_INDEX;j++){
+						linha += tab[a2 - 1][j].fill;
+					}
+					if(a2 - 1 == 0){
 						game_over = 1;
 					}
 				}else{
@@ -191,7 +264,10 @@ int main()
 				}
 			}else{
 				colision=1;
-				tab[MATRIX_ROW_INDEX-1][b].fill = 1;
+				tab[MATRIX_ROW_INDEX - 1][b0].fill = 1;
+				tab[MATRIX_ROW_INDEX - 2][b0].fill = 1;
+				tab[MATRIX_ROW_INDEX - 2][b0 + 1].fill = 1;
+				tab[MATRIX_ROW_INDEX - 2][b0 + 2].fill = 1;
 				turbo =0;
 				int i,j;
 				linha = 0;
@@ -242,12 +318,41 @@ void inicializa_matriz(Coordenate m[][MATRIX_COL_INDEX])
 	}
 }
 
-void inicializa_figura(JHI_Point2d pol_points[]){
+void start_points(JHI_Point2d pol_points[], int num){
 	int i;
 	JHI_Point2d p;
-	for(i=0;i<6;i++){
+	for(i=0;i<num;i++){
 		p.x = 0;
 		p.y = 0;
 		pol_points[i] = p;
 	}
 }
+
+void rotate_L_0(JHI_Point2d polygon[], JHI_Point2d origin){
+	pol_points[0].x = origin.x;
+	pol_points[0].y = origin.y;
+	//col_points[0] = pol_points[0]; 
+
+	pol_points[1].x = origin.x + 3*SIZE_BLOCK;
+	pol_points[1].y = origin.y;
+			
+	pol_points[2].x = origin.x + 3*SIZE_BLOCK;
+	pol_points[2].y = origin.y + SIZE_BLOCK;
+	col_points[2] = pol_points[2];
+			
+	pol_points[3].x = origin.x + SIZE_BLOCK;
+	pol_points[3].y = origin.y + SIZE_BLOCK;
+	col_points[1] = pol_points[3];
+			
+	pol_points[4].x = origin.x + SIZE_BLOCK;
+	pol_points[4].y = origin.y + 2*SIZE_BLOCK;
+			
+	pol_points[5].x = origin.x;
+	pol_points[5].y = origin.y + 2*SIZE_BLOCK;
+	col_points[0] = pol_points[5];	
+}
+
+
+
+
+
