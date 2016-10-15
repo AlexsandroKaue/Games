@@ -13,13 +13,13 @@
 //*  Author(s): João Gonçalves <joao.goncalves@larces.uece.br>               *
 //*             Henrique Neto <henrique.brandao@larces.uece.br>              *
 //****************************************************************************/
-#define SIZE_BLOCK 20
+#define SIZE_BLOCK 10
 #define EDGE 1
-#define QTD_ROWS_BLOCK 21
+#define QTD_ROWS_BLOCK 26
 #define QTD_COLS_BLOCK 20
 #define WIDTH_WINDOW QTD_COLS_BLOCK * (EDGE + SIZE_BLOCK + EDGE)
 #define HEIGHT_WINDOW QTD_ROWS_BLOCK * (EDGE + SIZE_BLOCK + EDGE)
- 
+#define TAM 4
 typedef struct{
 	int fill;
 	int color;
@@ -32,8 +32,14 @@ typedef struct{
 void inicializa_matriz(Coordenate m[][QTD_COLS_BLOCK]);
 void rotation_matrix(JHI_Point2d poly[], int num, int orientation);
 void translation_matrix(JHI_Point2d poly[], int num, int x, int y, int way);
-void vetify_region(Coordenate m[][3], int linha, int coluna);
-void status_L(Coordenate m[][3] , int s, int i, int j);
+void verify_region(Coordenate m[][TAM], int linha, int coluna);
+void status_L(Coordenate m[][TAM] , int s);
+void status_I(Coordenate m[][TAM] , int s);
+void status_Q(Coordenate m[][TAM] , int s);
+void status_Z(Coordenate m[][TAM] , int s);
+void status_T(Coordenate m[][TAM] , int s);
+void chose_peace(int i, Coordenate m[][TAM] , int s);
+
 
 int main()
 {
@@ -42,11 +48,10 @@ int main()
 	JHI_Keys cur_key;
 	Coordenate tab[QTD_ROWS_BLOCK + 1][QTD_COLS_BLOCK];
 	inicializa_matriz(tab);
-	Coordenate peace[3][3];
+	Coordenate peace[TAM][TAM];
 	JHI_Point2d rect;
 	int turbo = 0;
 	int move = 0;
-	int color;
 	int linha = 0;
 	int game_over=0;
 	int a;
@@ -56,12 +61,16 @@ int main()
 	JHI_KeyboardSt key;
 	JHI_MouseSt mouse;
 	JHI_Point2d central_point;
-	int speed = 2;
-	int rotation = 3;
+	int speed = 10;
+	int rotation = 0;
+	int turn = 1;
+	int op = 0;
+	int color = 0;
+	int change_color = 0;
 
 	point.y = 0;
 	srand( (unsigned)time(NULL) );
-	point.x = 0;
+	point.x = 10*(EDGE + SIZE_BLOCK + EDGE);
 	central_point.y = point.y + EDGE + (SIZE_BLOCK/2);
 	central_point.x = point.x + EDGE + (SIZE_BLOCK/2);
 	
@@ -80,7 +89,7 @@ int main()
 	//A função get_close_window() retorna se foi clicado no X da janela, dessa forma
 	// o retorno é igual a CLOSE, então o loop principal deve ser quebrado, indicando
 	//que o programa deve ser fechado
-	status_L(peace,0,3,3);
+	chose_peace(0,peace,0);
 	while (jhi_get_close_window() != JHI_CLOSE)
 	{
 		//Essas duas funções devem sempre esta no começo do loop
@@ -91,6 +100,18 @@ int main()
 		jhi_timer_start();
 		jhi_update();
 		jhi_clean();
+
+		if(colision){
+			srand( (unsigned)time(NULL));
+			op = rand() % 5;
+			chose_peace(op,peace,0);
+		}
+
+		if(change_color){
+			srand( (unsigned)time(NULL));
+			color = rand() % 4;
+			change_color = 0;
+		}
 
 		key = jhi_get_keyboard_status(0);
 		if (key.key_event == KEYBOARD_DOWN)
@@ -107,19 +128,19 @@ int main()
 				point.x-=(SIZE_BLOCK+EDGE);
 			}else if(key.key == KEY_UP){
 				rotation = (rotation + 1) % 4;
-				status_L(peace,rotation,3,3);
+				chose_peace(op,peace,rotation);
 			}else if(key.key == KEY_DOWN){
 				turbo = 2*(SIZE_BLOCK + 2*EDGE);
 			}
 		}
-
+		turn=0;
 		central_point.y = point.y + EDGE + (SIZE_BLOCK/2);
 		central_point.x = point.x + EDGE + (SIZE_BLOCK/2);
 		a = central_point.y / (SIZE_BLOCK + 2*EDGE);
 		b = central_point.x / (SIZE_BLOCK + 2*EDGE);
 		int i,j;
-		for(i=0;i<3;i++){
-			for(j=0;j<3;j++){
+		for(i=0;i<TAM;i++){
+			for(j=0;j<TAM;j++){
 				if(peace[i][j].fill){
 					if(tab[a+i][b+j].fill){
 						colision = 1;
@@ -136,23 +157,26 @@ int main()
 
 		if(colision){
 			printf("%s\n","Colision" );
-			for(i=0;i<3;i++){
-				for(j=0;j<3;j++){
+			for(i=0;i<TAM;i++){
+				for(j=0;j<TAM;j++){
 					if(peace[i][j].fill){
 						tab[(a+i)-1][b+j].fill = 1;
+						tab[(a+i)-1][b+j].color = color;
 						printf("%d, %d\n",a,b);
 						//getchar();
 					}
 				}
 			}
 			point.y = 0;
-			point.x = 0;
+			point.x = 10*(EDGE + SIZE_BLOCK + EDGE);
+			change_color = 1;
 		}else{
 			printf("%s\n","Not Colision" );
-			for(i=0;i<3;i++){
-				for(j=0;j<3;j++){
+			for(i=0;i<TAM;i++){
+				for(j=0;j<TAM;j++){
 					if(peace[i][j].fill){
 						tab[a+i][b+j].fill = 1;
+						tab[a+i][b+j].color = color;
 					}
 				}
 			}
@@ -171,14 +195,14 @@ int main()
 					rect.x = j * (SIZE_BLOCK+2*EDGE);
 					rect.y += EDGE;
 					rect.x += EDGE;
-					jhi_draw_rect(rect, SIZE_BLOCK, SIZE_BLOCK, WHITE);
+					jhi_draw_fill_rect(rect, SIZE_BLOCK, SIZE_BLOCK, tab[i][j].color);
 				}
 			}
 		}
 
 		if(!colision){
-			for(i=0;i<3;i++){
-				for(j=0;j<3;j++){
+			for(i=0;i<TAM;i++){
+				for(j=0;j<TAM;j++){
 					if(peace[i][j].fill){
 						tab[a+i][b+j].fill = 0;
 					}
@@ -186,103 +210,7 @@ int main()
 			}
 		}
 
-
-		//jhi_delay_mili_seconds(1000);
-		/*for (i = 0; i < jhi_get_number_of_events(); i++)
-		{
-
-			//Pega o status do teclado no evento i
-			key = jhi_get_keyboard_status(i);
-
-			if (jhi_is_key_arrow(key.key))
-			{
-				//se o teclado foi pressionado com a direção não atual
-				// ative o movimento e atualize a direção atual
-				if (key.key_event == KEYBOARD_DOWN && key.key != cur_key)
-				{
-					move = 1;
-					cur_key = key.key;
-
-				}
-				//se o teclado foi soltado com a direção atual
-				//então desative o movimento
-				else if (key.key_event == KEYBOARD_UP && key.key == cur_key)
-				{
-					move = 0;
-					cur_key = NO_KEY;
-				}
-			}
-
-			//Se o teclado foi pressionado
-			if (key.key_event == KEYBOARD_DOWN)
-			{
-				if(key.key == KEY_RIGHT && point.x + SIZE_BLOCK < WIDTH_WINDOW && 
-					tab[(point.y + SIZE_BLOCK) / SIZE_BLOCK][(point.x + SIZE_BLOCK) / SIZE_BLOCK].fill == 0)
-				{
-					point.x+=SIZE_BLOCK;
-				}
-				//Se teclado LEFT
-				else if(key.key == KEY_LEFT && point.x > 0 && 
-					tab[(point.y + SIZE_BLOCK) / SIZE_BLOCK][(point.x / SIZE_BLOCK)-1].fill == 0) 
-				{
-					point.x-=SIZE_BLOCK;
-				}
-			}
-
-		}
-		if (move)
-		{
-			if(key.key == KEY_DOWN) turbo = 20;
-		}
-		prox_y = point.y + SIZE_BLOCK + SPEED + turbo;
-		a = prox_y / SIZE_BLOCK;
-		b = point.x / SIZE_BLOCK;
-		if(prox_y < HEIGHT_WINDOW)
-		{
-			if(tab[a][b].fill == 1){
-				colision=1;
-				tab[a-1][b].fill = 1;
-				point.y = prox_y;
-				int i,j;
-				linha = 0;
-				for(j=0;j<QTD_COLS_BLOCK;j++){
-					linha += tab[a][j].fill;
-				}
-				if(a-1==0){
-					game_over = 1;
-				}
-			}else{
-				point.y += SPEED + turbo;
-				turbo = 0; 
-				colision=0;	
-			}
-		}else{
-			colision=1;
-			tab[QTD_ROWS_BLOCK-1][b].fill = 1;
-			turbo =0;
-			int i,j;
-			linha = 0;
-			for(j=0;j<QTD_COLS_BLOCK;j++){
-				linha += tab[QTD_ROWS_BLOCK-1][j].fill;
-			}
-			
-		}
-
-		if(colision){
-			if(linha == QTD_COLS_BLOCK){
-				for(i=QTD_ROWS_BLOCK-2;i>=0;i--){
-					for(j=QTD_COLS_BLOCK-1;j>=0;j--){
-						tab[i+1][j] = tab[i][j];
-						tab[i][j].fill = 0;
-					}
-				}
-			}
-			point.y = 0;
-			srand( (unsigned)time(NULL) );
-			point.x = (rand() % OFFSET_HORIZON) * SIZE_BLOCK;
-		}*/
-
-		
+		//hi_delay_mili_seconds(200);
 		//Espera tempo necessário para controlar a quantidade de frames por segundo
 		jhi_wait_time();
 	}
@@ -337,7 +265,7 @@ void translation_matrix(JHI_Point2d poly[], int num, int x, int y, int way)
 	
 }
 
-void vetify_region(Coordenate m[][3], int linha, int coluna){
+void verify_region(Coordenate m[][TAM], int linha, int coluna){
 	Coordenate coordenate;
 	coordenate.fill = 0;
 	int i,j;
@@ -348,10 +276,25 @@ void vetify_region(Coordenate m[][3], int linha, int coluna){
 	}
 }
 
-void status_L(Coordenate m[][3] , int s, int i, int j){
+void chose_peace(int i, Coordenate m[][TAM] , int s){
+	if(i == 0){
+		status_L(m,s);
+	}else if(i == 1){
+		status_I(m,s);
+	}else if(i == 2){
+		status_Q(m,s);
+	}else if(i == 3){
+		status_Z(m,s);
+	}else if(i == 4){
+		status_T(m,s);
+	}
+
+}
+
+void status_L(Coordenate m[][TAM] , int s){
 	Coordenate coordenate;
 	coordenate.fill = 1;
-	vetify_region(m,i,j);
+	verify_region(m,TAM,TAM);
 	switch(s){
 		case 0: m[0][0] = coordenate;
 				m[1][0] = coordenate;
@@ -376,3 +319,92 @@ void status_L(Coordenate m[][3] , int s, int i, int j){
 				break;
 	}
 }
+
+void status_I(Coordenate m[][TAM] , int s){
+	Coordenate coordenate;
+	coordenate.fill = 1;
+	verify_region(m,TAM,TAM);
+	switch(s){
+		case 0:	
+		case 2: m[0][0] = coordenate;
+				m[1][0] = coordenate;
+				m[2][0] = coordenate;
+				m[3][0] = coordenate;
+				break;
+		case 1:
+		case 3:
+				m[1][0] = coordenate;
+				m[1][1] = coordenate;
+				m[1][2] = coordenate;
+				m[1][3] = coordenate;
+				break;
+	}
+}
+
+void status_Q(Coordenate m[][TAM] , int s){
+	Coordenate coordenate;
+	coordenate.fill = 1;
+	verify_region(m,TAM,TAM);
+	switch(s){
+		case 0:	
+		case 2:
+		case 1:
+		case 3:
+				m[0][0] = coordenate;
+				m[0][1] = coordenate;
+				m[1][0] = coordenate;
+				m[1][1] = coordenate;
+	}
+}
+
+void status_Z(Coordenate m[][TAM] , int s){
+	Coordenate coordenate;
+	coordenate.fill = 1;
+	verify_region(m,TAM,TAM);
+	switch(s){
+		case 0:	
+		case 2: m[0][1] = coordenate;
+				m[0][2] = coordenate;
+				m[1][1] = coordenate;
+				m[1][0] = coordenate;
+				break;
+		case 1:
+		case 3:
+				m[0][0] = coordenate;
+				m[1][0] = coordenate;
+				m[1][1] = coordenate;
+				m[2][1] = coordenate;
+				break;
+	}
+}
+
+void status_T(Coordenate m[][TAM] , int s){
+	Coordenate coordenate;
+	coordenate.fill = 1;
+	verify_region(m,TAM,TAM);
+	switch(s){
+		case 0:	m[0][0] = coordenate;
+				m[0][1] = coordenate;
+				m[0][2] = coordenate;
+				m[1][1] = coordenate;
+				break;
+		case 1: m[0][2] = coordenate;
+				m[1][2] = coordenate;
+				m[1][1] = coordenate;
+				m[2][2] = coordenate;
+				break;
+		case 2: m[2][2] = coordenate;
+				m[2][1] = coordenate;
+				m[1][1] = coordenate;
+				m[2][0] = coordenate;
+				break;
+		case 3:
+				m[2][0] = coordenate;
+				m[1][0] = coordenate;
+				m[1][1] = coordenate;
+				m[0][0] = coordenate;
+				break;
+	}
+}
+
+
