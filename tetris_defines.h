@@ -1,0 +1,12 @@
+#ifndef DEFINES_H
+#define DEFINES_H
+
+#define SIZE_BLOCK 20
+#define EDGE 1
+#define QTD_ROWS_BLOCK 20
+#define QTD_COLS_BLOCK 15
+#define WIDTH_WINDOW QTD_COLS_BLOCK * (EDGE + SIZE_BLOCK + EDGE)
+#define HEIGHT_WINDOW QTD_ROWS_BLOCK * (EDGE + SIZE_BLOCK + EDGE)
+#define TAM 4
+
+#endif

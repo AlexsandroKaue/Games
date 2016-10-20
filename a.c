@@ -30,7 +30,7 @@
 #define WIDTH_WINDOW QTD_COLS_BLOCK * (EDGE + SIZE_BLOCK + EDGE)
 #define HEIGHT_WINDOW QTD_ROWS_BLOCK * (EDGE + SIZE_BLOCK + EDGE)
 #define TAM 4
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
 typedef struct{
 	int fill;
 	int color;
@@ -54,7 +54,7 @@ void status_Z(Coordenate m[][TAM] , int s);
 void status_T(Coordenate m[][TAM] , int s);
 void chose_peace(int i, Coordenate m[][TAM] , int s);
 
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
 
 int main()
 {
@@ -77,7 +77,7 @@ int main()
 	JHI_Point2d rect;
 	int turbo = 0;
 	int move = 0;
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
 	int linha = 0;
 	int game_over=0;
 	int a;
@@ -108,7 +108,7 @@ int main()
 	central_point.x = point.x + EDGE + (SIZE_BLOCK/2);
 	
 	
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
 	//Essa função irá inicializar a janela e todos os outros módulos incluindo som, fonte.
 	jhi_initialize_window(WIDTH_WINDOW, HEIGHT_WINDOW, 32, BLACK);
 
@@ -121,7 +121,7 @@ int main()
 	jhi_set_fps_timer(20);
 =======
 	jhi_set_fps_timer(speed);
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
 
 	jhi_init_keyboard(&key);
 	//A função get_close_window() retorna se foi clicado no X da janela, dessa forma
@@ -130,7 +130,7 @@ int main()
 <<<<<<< HEAD
 =======
 	chose_peace(0,peace,0);
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
 	while (jhi_get_close_window() != JHI_CLOSE)
 	{
 		//Essas duas funções devem sempre esta no começo do loop
@@ -330,7 +330,7 @@ int main()
 		}
 
 		//hi_delay_mili_seconds(200);
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
 		//Espera tempo necessário para controlar a quantidade de frames por segundo
 		jhi_wait_time();
 	}
@@ -345,7 +345,7 @@ int main()
 void inicializa_matriz(Coordenate m[][MATRIX_COL_INDEX])
 =======
 void inicializa_matriz(Coordenate m[][QTD_COLS_BLOCK])
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
 {
 	int i,j;
 	Coordenate coordenate;
@@ -356,7 +356,7 @@ void inicializa_matriz(Coordenate m[][QTD_COLS_BLOCK])
 =======
 	for(i=0;i<QTD_ROWS_BLOCK;i++){
 		for(j=0;j<QTD_COLS_BLOCK;j++){
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
 			coordenate.fill = 0;
 			m[i][j] = coordenate;
 		}
@@ -540,4 +540,4 @@ void status_T(Coordenate m[][TAM] , int s){
 }
 
 
->>>>>>> ffc0bdc498317355f8ba4825d39f50b9af0f99a3
+>>>>>>> a25b1249eedd508b2be87d7d25f87abece8200dd
