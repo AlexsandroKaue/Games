@@ -2,7 +2,9 @@
 #include "jhi_timer.h" // -> Temporização para animação
 #include "jhi_shapes.h"
 #include "jhi_keyboard.h"
+#include "jhi_text.h"
 #include "time.h"
+#include "jhi_sound.h"
 #include "tetris.h"
 
 //****************************************************************************
@@ -45,7 +47,16 @@ int main()
 	JHI_KeyboardSt key;
 	JHI_MouseSt mouse;
 	JHI_Point2d central_point;
-	int speed = 40;
+	JHI_Music music;
+	JHI_Effect block;
+	JHI_Effect destruction;	
+	JHI_Font font_text;
+	JHI_Text score_t;
+	JHI_Text value_t;
+	char txt[20];
+	char score[10];
+	int s = 0;
+	int speed = 25;
 	int rotation = 0;
 	int turn = 1;
 	int op = 0;
@@ -56,16 +67,28 @@ int main()
 	point.y = 0;
 	srand( (unsigned)time(NULL) );
 	point.x = 5*(EDGE + SIZE_BLOCK + EDGE);
-	//central_point.y = point.y + EDGE + (SIZE_BLOCK/2);
+	//central_point.y = point.y + EDGE + (SIZE_BL OCK/2);
 	//central_point.x = point.x + EDGE + (SIZE_BLOCK/2);
 	
 	
 	//Essa função irá inicializar a janela e todos os outros módulos incluindo som, fonte.
-	jhi_initialize_window(WIDTH_WINDOW, HEIGHT_WINDOW, 32, BLACK);
+	jhi_initialize_window(WIDTH_WINDOW+100, HEIGHT_WINDOW, 32, BACKGROUND_COLOR);
 
 	//Nessa função escolhemos o nome da janela, que ficará no topo da tela
 	jhi_choice_window_name("Exemplo 9");
+	jhi_load_music(&music, "sounds/tetris_theme.ogg");
+	jhi_load_font(&font_text, "fonts/PonyMaker.ttf", 15);
+	jhi_init_text(&score_t);
+	jhi_init_text(&value_t);
+	score_t.pos.x = (QTD_COLS_BLOCK + 4)  * (EDGE + SIZE_BLOCK + EDGE);
+	score_t.pos.y = (QTD_ROWS_BLOCK / 3)  * (EDGE + SIZE_BLOCK + EDGE);
+	value_t.pos.x = (QTD_COLS_BLOCK + 4)  * (EDGE + SIZE_BLOCK + EDGE);
+	value_t.pos.y = (QTD_ROWS_BLOCK / 2)  * (EDGE + SIZE_BLOCK + EDGE);
 
+	jhi_load_effect(&block, "sounds/tetris_rotation.ogg");
+	jhi_load_effect(&destruction, "sounds/tetris_destruction.ogg");
+	jhi_play_music(&music, -1);
+	jhi_delay_mili_seconds(20);
 
 	//Seta a quantidade de frames por segundo na tela
 	jhi_set_fps_timer(speed);
@@ -75,6 +98,15 @@ int main()
 	// o retorno é igual a CLOSE, então o loop principal deve ser quebrado, indicando
 	//que o programa deve ser fechado
 	rotation_peace(0,peace,0);
+	//printf("%s\n","Vermelho ganhou!");
+	memset(txt, 0, sizeof(char) * 20);
+	memset(score, 0, sizeof(char) * 20);
+	sprintf(txt, "%s", "SCORE");
+	sprintf(score, "%d", s);
+	jhi_set_text(&font_text, &score_t, WHITE, txt);
+	jhi_set_text(&font_text, &value_t, WHITE, score);
+	jhi_draw_text(&score_t, score_t.pos);
+	jhi_draw_text(&value_t, value_t.pos); 
 	while (jhi_get_close_window() != JHI_CLOSE)
 	{
 		//Essas duas funções devem sempre esta no começo do loop
@@ -85,7 +117,10 @@ int main()
 		jhi_timer_start();
 		jhi_update();
 		jhi_clean();
+		
 
+		jhi_draw_text(&score_t, score_t.pos);
+		jhi_draw_text(&value_t, value_t.pos); 
 		if(colision_bottom){
 			srand( (unsigned)time(NULL));
 			op = rand() % 5;
@@ -125,43 +160,70 @@ int main()
 		}
 		turbo = 0;
 		for (i = 0; i < jhi_get_number_of_events(); i++){
+			
 			key = jhi_get_keyboard_status(i);
+			//jhi_delay_mili_seconds(500);
 			printf("%d\n",i );
-			if (key.key_event == KEYBOARD_DOWN)
+
+			if (jhi_is_key_arrow(key.key))
 			{
-				if(key.key == KEY_RIGHT/* && point.x + SIZE_BLOCK + 2*EDGE < WIDTH_WINDOW && 
-					tab[central_point.y / (SIZE_BLOCK + 2*EDGE)][(central_point.x + SIZE_BLOCK + 2*EDGE) / (SIZE_BLOCK + 2*EDGE)].fill == 0*/)
+
+				//se o teclado foi pressionado com a direção não atual
+				// ative o movimento e atualize a direção atual
+				if (key.key_event == KEYBOARD_DOWN && key.key != cur_key)
 				{
-					point.x+=(SIZE_BLOCK+EDGE);
-					//count_time_right_pressed++;
+					move = 1;
+					cur_key = key.key;
+
 				}
-				//Se teclado LEFT
-				else if(key.key == KEY_LEFT/* && point.x > 0 && 
-					tab[central_point.y / (SIZE_BLOCK + 2*EDGE)][(central_point.x - SIZE_BLOCK - 2*EDGE) / (SIZE_BLOCK + 2*EDGE)].fill == 0*/) 
+				//se o teclado foi soltado com a direção atual
+				//então desative o movimento
+				else if (key.key_event == KEYBOARD_UP && key.key == cur_key)
 				{
-					point.x-=(SIZE_BLOCK+EDGE);
-					//count_time_left_pressed++;
-				}
-				else if(key.key == KEY_UP){
-					rotation = (rotation + 1) % 4;
-					rotation_peace(op,peace,rotation);
-				}else if(key.key == KEY_DOWN){
-					turbo = 8;
+					move = 0;
+					cur_key = NO_KEY;
 				}
 			}
+			
+		}
+
+		if (move)
+		{
+
+			if(key.key == KEY_RIGHT/* && point.x + SIZE_BLOCK + 2*EDGE < WIDTH_WINDOW && 
+				tab[central_point.y / (SIZE_BLOCK + 2*EDGE)][(central_point.x + SIZE_BLOCK + 2*EDGE) / (SIZE_BLOCK + 2*EDGE)].fill == 0*/)
+			{	
+				//jhi_delay_mili_seconds(150);
+				jhi_play_effect(&block, 0);
+				point.x+=(SIZE_BLOCK+EDGE);
+				//count_time_right_pressed++;
+			}
+			//Se teclado LEFT
+			else if(key.key == KEY_LEFT/* && point.x > 0 && 
+				tab[central_point.y / (SIZE_BLOCK + 2*EDGE)][(central_point.x - SIZE_BLOCK - 2*EDGE) / (SIZE_BLOCK + 2*EDGE)].fill == 0*/) 
+			{
+				//jhi_delay_mili_seconds(150);
+				jhi_play_effect(&block, 0);
+				point.x-=(SIZE_BLOCK+EDGE);
+				//count_time_left_pressed++;
+			}
+			else if(key.key == KEY_UP){
+				rotation = (rotation + 1) % 4;
+				jhi_play_effect(&block, 0);
+				rotation_peace(op,peace,rotation);
+				move = 0;
+				//cur_key = NO_KEY;
+			}else if(key.key == KEY_DOWN){
+				turbo = SIZE_BLOCK - 1;
+			}
+			
 			central_point.x = point.x + EDGE + (SIZE_BLOCK/2);
 			b = central_point.x / (SIZE_BLOCK + 2*EDGE);
-		
 			colision = verify_colision(tab,peace,a,b);
-			if(colision) break;
-		}
-		
-		//central_point.x = point.x + EDGE + (SIZE_BLOCK/2);
-		//b = central_point.x / (SIZE_BLOCK + 2*EDGE);
-		
-		//colision = verify_colision(tab,peace,a,b);
+	 	}
 
-		if(colision){
+
+	 	if(colision){
 			if(key.key == KEY_RIGHT){
 				printf("%s\n","Colision RIGHT" );
 				offset_side = -1;
@@ -178,9 +240,8 @@ int main()
 				rotation_peace(op,peace,rotation-1);
 			}
 		}
-		key.key = NO_KEY;
-
-			
+	 	
+	 		
 
 		for(i=0;i<TAM;i++){
 			for(j=0;j<TAM;j++){
@@ -192,16 +253,18 @@ int main()
 				}
 			}
 		}
+
 		
 		for(i=0;i<QTD_ROWS_BLOCK;i++){
-			for(j=1;j<QTD_COLS_BLOCK+1;j++){
+			for(j=0;j<QTD_COLS_BLOCK+2;j++){
 				if(tab[i][j].fill == 1){
 					rect.y = i * (SIZE_BLOCK+2*EDGE);
-					rect.x = (j-1) * (SIZE_BLOCK+2*EDGE);
+					rect.x = j * (SIZE_BLOCK+2*EDGE);
 					rect.y += EDGE;
 					rect.x += EDGE;
 					jhi_draw_fill_rect(rect, SIZE_BLOCK, SIZE_BLOCK, tab[i][j].color);
 				}
+				
 			}
 		}
 
@@ -211,6 +274,7 @@ int main()
 			srand( (unsigned)time(NULL) );
 			point.x = 5*(EDGE + SIZE_BLOCK + EDGE);
 			jump = 0;
+
 			for(i=QTD_ROWS_BLOCK-1;i>0;i--){
 				count = 0;
 				for(j=1;j<QTD_COLS_BLOCK+1;j++){
@@ -225,13 +289,23 @@ int main()
 					line = i;
 				}
 			}
-
-			for(i=line-1;i>0;i--){
-				for(j=1;j<QTD_COLS_BLOCK+1;j++){
-					tab[i+jump][j] = tab[i][j];  
+			if(jump!=0){
+				s += jump * 100;
+				sprintf(score, "%d", s);
+				jhi_set_text(&font_text, &value_t, WHITE, score);
+				jhi_play_effect(&destruction, 0);
+				line_destruction_effect(tab,line,jump);
+				for(i=line-1;i>0;i--){
+					for(j=1;j<QTD_COLS_BLOCK+1;j++){
+						tab[i+jump][j] = tab[i][j];  
+					}
 				}
 			}
 
+			if(a == 0){
+				printf("%s\n","Game Over" );
+				getchar();
+			}
 		}else{
 			for(i=0;i<TAM;i++){
 				for(j=0;j<TAM;j++){
@@ -241,10 +315,9 @@ int main()
 				}
 			}
 			point.y += (1 + 2*EDGE + turbo);
-			//turbo = 0;
 		}
-		
 		jhi_wait_time();
+		//jhi_delay_mili_seconds(100);
 	}
 
 	//Limpar alocações feitas pela biblioteca
